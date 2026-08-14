@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "ImageDimensions — Image Size Auditor",
+  "version": "0.1.0",
+  "description": "See every image's real size versus the size it's displayed at, on any page — including pages a scanner can't reach.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Audit images on this page",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": ["activeTab", "scripting"],
+  "homepage_url": "https://imagedimensions.com"
+}

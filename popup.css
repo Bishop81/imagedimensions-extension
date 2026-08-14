@@ -1,0 +1,250 @@
+/*
+ * Deliberately the site's vocabulary, not a new one — this is a small slice of imagedimensions.com,
+ * so the palette below is lifted from the Tailwind values the site actually uses (gray-50/200/500/
+ * 700/900, blue-600/700, amber-50/200/800). No gradients, no rounded-2xl cards, no decorative
+ * colour: amber appears only where something is actually wrong.
+ *
+ * Type is a system stack rather than bundled Inter. The site uses Inter, but shipping a woff2 into
+ * a popup that renders for 300ms is weight for almost no visual delta at 12-13px on the platforms
+ * Chrome runs on. Honest trade, noted rather than hidden.
+ */
+
+:root {
+  --white: #ffffff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-700: #374151;
+  --gray-900: #111827;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --amber-50: #fffbeb;
+  --amber-200: #fde68a;
+  --amber-800: #92400e;
+  --green-700: #15803d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 380px;
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--gray-700);
+  background: var(--gray-50);
+}
+
+/* ── chrome ─────────────────────────────────────────────────────────── */
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.bar--footer {
+  border-bottom: 0;
+  border-top: 1px solid var(--gray-200);
+}
+
+.wordmark {
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -0.01em;
+}
+
+.host {
+  font-size: 11px;
+  color: var(--gray-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.link {
+  color: var(--blue-600);
+  text-decoration: none;
+  font-size: 12px;
+}
+.link:hover {
+  text-decoration: underline;
+}
+
+.btn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--white);
+  background: var(--blue-600);
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 11px;
+  cursor: pointer;
+}
+.btn:hover {
+  background: var(--blue-700);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue-600);
+  outline-offset: 2px;
+}
+
+/* ── summary ────────────────────────────────────────────────────────── */
+
+.summary {
+  padding: 10px 12px;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.headline {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gray-900);
+}
+
+.headline strong {
+  font-weight: 700;
+}
+
+.headline--warn strong {
+  color: var(--amber-800);
+}
+
+.headline--ok strong {
+  color: var(--green-700);
+}
+
+.subline {
+  margin: 3px 0 0;
+  font-size: 11px;
+  color: var(--gray-500);
+}
+
+/* ── the list ───────────────────────────────────────────────────────── */
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.thumb {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: 3px;
+}
+
+.meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.name {
+  display: block;
+  color: var(--gray-900);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The signature line: the file's real size, the size it was drawn at, and the gap between them.
+   That gap is the entire product thesis, so it is the one thing set in a mono face. */
+.sizes {
+  display: block;
+  margin-top: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--gray-500);
+}
+
+.sizes .arrow {
+  color: var(--gray-400);
+  margin: 0 4px;
+}
+
+.badge {
+  flex: 0 0 auto;
+  align-self: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--amber-50);
+  border: 1px solid var(--amber-200);
+  color: var(--amber-800);
+}
+
+.badge--ok {
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+  color: var(--gray-500);
+}
+
+/* ── states ─────────────────────────────────────────────────────────── */
+
+.state {
+  margin: 0;
+  padding: 22px 16px;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 12px;
+}
+
+.state strong {
+  display: block;
+  color: var(--gray-900);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .row {
+    animation: rise 160ms ease-out both;
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+  }
+}

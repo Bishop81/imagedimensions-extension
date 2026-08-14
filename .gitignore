@@ -1,0 +1,6 @@
+*.log
+.DS_Store
+
+# Web Store upload packages, built by scripts/package.sh
+*.zip
+dist/

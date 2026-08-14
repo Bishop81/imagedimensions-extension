@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="bar">
+      <span class="wordmark">ImageDimensions</span>
+      <span class="host" id="host"></span>
+    </header>
+
+    <!-- One region swapped between states. Each state says what happened and what to do next. -->
+    <main id="view" aria-live="polite">
+      <p class="state">Measuring images…</p>
+    </main>
+
+    <footer class="bar bar--footer">
+      <a
+        class="link"
+        id="site-link"
+        href="https://imagedimensions.com"
+        target="_blank"
+        rel="noopener"
+        >Full report and tools</a
+      >
+      <button class="btn" id="recheck" type="button">Re-check</button>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
