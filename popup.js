@@ -24,13 +24,17 @@ const recheckBtn = document.getElementById('recheck');
  * ------------------------------------------------------------------------- */
 function measurePage() {
   const out = [];
+  const els = [];
   const seen = new Set();
 
-  const push = (src, natural_w, natural_h, rect, kind) => {
+  const push = (el, src, natural_w, natural_h, rect, kind) => {
     if (!src || src.startsWith('data:')) return;
     const key = src + '|' + Math.round(rect.width) + 'x' + Math.round(rect.height);
     if (seen.has(key)) return;
     seen.add(key);
+    // `ref` is an index into els[], which stays in this isolated world for revealImage() to look up
+    // later. Deliberately not a data-attribute on the element: writing to the page's DOM could trip
+    // a framework's diffing or a MutationObserver, and we are a read-only audit tool.
     out.push({
       src,
       natural_w: natural_w || 0,
@@ -39,11 +43,13 @@ function measurePage() {
       rendered_h: Math.round(rect.height),
       visible: rect.width > 0 && rect.height > 0,
       kind,
+      ref: els.length,
     });
+    els.push(el);
   };
 
   document.querySelectorAll('img').forEach((img) => {
-    push(img.currentSrc || img.src, img.naturalWidth, img.naturalHeight, img.getBoundingClientRect(), 'img');
+    push(img, img.currentSrc || img.src, img.naturalWidth, img.naturalHeight, img.getBoundingClientRect(), 'img');
   });
 
   // CSS backgrounds are ~20% of images on a typical page and most audits miss them entirely.
@@ -56,7 +62,7 @@ function measurePage() {
     if (!match || !match[1] || match[1].startsWith('data:')) return;
     const rect = el.getBoundingClientRect();
     if (rect.width < 2 || rect.height < 2) return;
-    bg.push({ src: new URL(match[1], location.href).href, rect });
+    bg.push({ el, src: new URL(match[1], location.href).href, rect });
   });
 
   const dpr = window.devicePixelRatio || 1;
@@ -74,9 +80,70 @@ function measurePage() {
         }),
     ),
   ).then((resolved) => {
-    resolved.forEach((r) => push(r.src, r.w, r.h, r.rect, 'css'));
+    resolved.forEach((r) => push(r.el, r.src, r.w, r.h, r.rect, 'css'));
+    window.__imgdimEls = els;
     return { url: location.href, title: document.title, dpr, images: out };
   });
+}
+
+/*
+ * Also injected. Scrolls the clicked image into view and rings it for a couple of seconds.
+ *
+ * The ring is position:fixed and re-placed every frame rather than drawn once, because the scroll
+ * is smooth and because sticky/fixed images move under the viewport rather than with the document.
+ * Re-reading getBoundingClientRect each frame is the one approach that is correct for all three.
+ *
+ * Appended to documentElement, not body: an ancestor with a transform becomes the containing block
+ * for position:fixed, and `body { transform }` is common enough to matter while `html { transform }`
+ * is not. Nothing else about the page is touched, and the ring removes itself.
+ */
+function revealImage(ref, oversized) {
+  const el = (window.__imgdimEls || [])[ref];
+  // The isolated world is torn down on navigation, so a missing array means the page moved on.
+  if (!window.__imgdimEls) return { ok: false, reason: 'stale' };
+  if (!el || !el.isConnected) return { ok: false, reason: 'gone' };
+
+  const first = el.getBoundingClientRect();
+  if (!first.width || !first.height) return { ok: false, reason: 'hidden' };
+
+  if (window.__imgdimClear) window.__imgdimClear();
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({ block: 'center', inline: 'center', behavior: reduced ? 'auto' : 'smooth' });
+
+  const line = oversized ? '#b45309' : '#2563eb';
+  const glow = oversized ? 'rgba(180,83,9,.25)' : 'rgba(37,99,235,.25)';
+  const ring = document.createElement('div');
+  ring.style.cssText =
+    'position:fixed;z-index:2147483647;pointer-events:none;border-radius:2px;' +
+    `border:2px solid ${line};box-shadow:0 0 0 3px ${glow};` +
+    `top:${first.top}px;left:${first.left}px;width:${first.width}px;height:${first.height}px;` +
+    'transition:opacity 240ms ease-out;opacity:1';
+  document.documentElement.appendChild(ring);
+
+  let raf = 0;
+  const clear = () => {
+    cancelAnimationFrame(raf);
+    ring.remove();
+    window.__imgdimClear = null;
+  };
+  const place = (now, start = now) => {
+    if (!el.isConnected) return clear();
+    const r = el.getBoundingClientRect();
+    ring.style.top = r.top + 'px';
+    ring.style.left = r.left + 'px';
+    ring.style.width = r.width + 'px';
+    ring.style.height = r.height + 'px';
+    if (now - start < 2400) raf = requestAnimationFrame((t) => place(t, start));
+    else {
+      ring.style.opacity = '0';
+      setTimeout(clear, 280);
+    }
+  };
+  window.__imgdimClear = clear;
+  raf = requestAnimationFrame((t) => place(t));
+
+  return { ok: true };
 }
 
 /* ------------------------------------------------------------------------ */
@@ -106,6 +173,43 @@ function fileName(src) {
     return decodeURIComponent(path.slice(path.lastIndexOf('/') + 1)) || src;
   } catch {
     return src;
+  }
+}
+
+/* The subline doubles as the place we report a failed jump, so render() hands it over here. */
+let subline = null;
+let sublineText = '';
+let sublineTimer = 0;
+
+const CANT_REACH = {
+  gone: 'That image has left the page. Press Re-check.',
+  hidden: 'That image is hidden right now, so there is nothing to point at.',
+  stale: 'The page has changed since this was measured. Press Re-check.',
+};
+
+function note(reason) {
+  if (!subline) return;
+  clearTimeout(sublineTimer);
+  subline.textContent = CANT_REACH[reason] || CANT_REACH.gone;
+  subline.classList.add('subline--note');
+  sublineTimer = setTimeout(() => {
+    subline.textContent = sublineText;
+    subline.classList.remove('subline--note');
+  }, 3200);
+}
+
+async function reveal(img) {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id) return note('gone');
+    const [res] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: revealImage,
+      args: [img.ref, img.ratio > OVERSIZED_AT],
+    });
+    if (!res?.result?.ok) note(res?.result?.reason);
+  } catch {
+    note('stale');
   }
 }
 
@@ -151,17 +255,26 @@ function render(data) {
     : `<strong>All ${measurable.length} images are sized well</strong>`;
   const sub = document.createElement('p');
   sub.className = 'subline';
-  sub.textContent = oversized.length
-    ? `Measured against what your ${dpr}× display actually needs. Worst first.`
-    : `Every measurable image suits your ${dpr}× display.`;
+  sub.textContent =
+    (oversized.length
+      ? `Measured against what your ${dpr}× display actually needs. Worst first.`
+      : `Every measurable image suits your ${dpr}× display.`) +
+    ' Click a row to jump to it on the page.';
   summary.append(headline, sub);
+  subline = sub;
+  sublineText = sub.textContent;
+  clearTimeout(sublineTimer);
 
   const list = document.createElement('ul');
   list.className = 'list';
 
   measurable.slice(0, 60).forEach((img) => {
     const li = document.createElement('li');
-    li.className = 'row';
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'row';
+    row.title = 'Jump to this image on the page';
+    row.addEventListener('click', () => reveal(img));
 
     const thumb = document.createElement('img');
     thumb.className = 'thumb';
@@ -194,7 +307,8 @@ function render(data) {
       ? 'Pixels downloaded versus pixels displayed'
       : 'Within a sensible retina allowance';
 
-    li.append(thumb, meta, badge);
+    row.append(thumb, meta, badge);
+    li.append(row);
     list.append(li);
   });
 

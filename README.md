@@ -45,6 +45,26 @@ pixels the display genuinely needs. The same image reads **1.0× on a retina scr
 CSS background images are included — they are about 20% of images on a typical page and most audits
 miss them entirely.
 
+## Finding an image on the page
+
+Click any row and the page scrolls that image to the centre of the view and rings it for a couple of
+seconds — amber if it is oversized, blue if it is fine. A filename and a pixel count tell you an
+image is wrong; they do not tell you *which* image it is on a long page, and that is the gap this
+closes.
+
+It works for images inside nested scroll containers (both the page and the container scroll) and for
+sticky or fixed elements, because the ring re-reads the element's position every frame rather than
+being drawn once. When a jump cannot land, the reason appears in place of the summary line:
+
+| Reason | What happened |
+|---|---|
+| *That image has left the page* | The element was removed since the audit — a carousel advanced, or a framework re-rendered |
+| *That image is hidden right now* | It is still in the DOM but has no box to point at |
+| *The page has changed* | The page navigated, so the measurement no longer applies. Press **Re-check** |
+
+The page's own DOM is never modified: the measured elements are held in the extension's isolated
+world, and the ring is a single overlay that removes itself.
+
 ## Permissions, and what is deliberately absent
 
 | Permission | Why |

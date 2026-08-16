@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ImageDimensions — Image Size Auditor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "See every image's real size versus the size it's displayed at, on any page — including pages a scanner can't reach.",
   "icons": {
     "16": "icons/icon16.png",

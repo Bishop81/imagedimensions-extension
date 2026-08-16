@@ -137,6 +137,11 @@ body {
   color: var(--gray-500);
 }
 
+/* Shown when a jump cannot land — the image was removed, hidden, or the page has since changed. */
+.subline--note {
+  color: var(--amber-800);
+}
+
 /* ── the list ───────────────────────────────────────────────────────── */
 
 .list {
@@ -147,17 +152,40 @@ body {
   overflow-y: auto;
 }
 
+/* Each row is a button: clicking it scrolls the page to that image and rings it. Styled as a plain
+   row rather than as a control — the whole list would look like a toolbar otherwise — so the
+   affordance is carried by the cursor, the hover wash and the sentence in the subline. */
 .row {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  width: 100%;
+  margin: 0;
   padding: 9px 12px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   background: var(--white);
+  border: 0;
   border-bottom: 1px solid var(--gray-200);
+  cursor: pointer;
 }
 
-.row:last-child {
+.row:hover {
+  background: var(--gray-50);
+}
+
+.row:active {
+  background: var(--gray-100);
+}
+
+.list li:last-child .row {
   border-bottom: 0;
+}
+
+/* Inset so the ring is not clipped by the scrolling list. */
+.row:focus-visible {
+  outline-offset: -2px;
 }
 
 .thumb {
