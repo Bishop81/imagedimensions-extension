@@ -5,8 +5,9 @@ Everything the Developer Dashboard asks for, in the order it asks. Fields are ma
 
 Upload package: `dist/imagedimensions-extension-0.2.0.zip` (run `./scripts/package.sh`).
 
-> ⚠️ **One blocker before you submit — see [Privacy policy URL](#privacy-policy-url-required) at the
-> bottom.** `imagedimensions.com/privacy` does not exist yet. Everything else here is ready.
+> ✅ Nothing is outstanding. The privacy policy the Store requires is live at
+> `imagedimensions.com/privacy` (built 2026-08-17), with an extension-specific section at
+> `#extension`.
 
 ---
 
@@ -96,7 +97,8 @@ extension/icons/icon128.png
 
 ### Screenshots **[required]** — at least 1, up to 5. 1280×800 or 640×400 PNG/JPEG
 
-Generated into `store/` (see `scripts/screenshots.sh`):
+Committed in `store/`, already cropped to exactly 1280×800. These are real renders of the real popup
+over a demo page — not mockups — so they stay honest if the UI changes:
 
 | File | Shows |
 |---|---|
@@ -204,48 +206,22 @@ Then tick all three certifications — each is true:
 ### Privacy policy URL **[required]**
 
 ```
-https://imagedimensions.com/privacy
+https://imagedimensions.com/privacy#extension
 ```
 
-🔴 **THIS PAGE DOES NOT EXIST YET.** The site has `/contact` and `/affiliate-disclosure` but no
-privacy policy. The Store requires a reachable URL here and a 404 is a rejection. Either publish the
-page first, or point this field at `https://imagedimensions.com/contact` as a stopgap — the former is
-better, since a privacy policy is the single most reviewer-visible page for an extension whose entire
-pitch is "nothing leaves your machine".
+✅ **Live.** Built 2026-08-17. The page covers the website and the extension, with the
+extension-specific section anchored at `#extension` — that is the part a reviewer needs, and the
+anchor drops them straight on it.
 
-Ready-to-publish text, if you want it as a page:
+It states, accurately and checkably: the extension collects, transmits, stores and shares nothing;
+makes no network requests; has no analytics, telemetry, cookies, storage or account; requests only
+`activeTab` and `scripting` with **no host permissions**; and links the public source so none of it
+has to be taken on trust.
 
-```
-Privacy Policy — ImageDimensions Chrome Extension
-
-Last updated: 16 August 2026
-
-The ImageDimensions browser extension does not collect, transmit, store, or share any data.
-
-What the extension does
-When you click its toolbar icon, the extension measures the images on the page you are currently
-viewing and displays the results in its popup. The measurements exist only for as long as the popup
-is open.
-
-What it does not do
-The extension makes no network requests of any kind. It has no analytics, no telemetry, no error
-reporting, no cookies, no local or synced storage, and no account. It does not read your browsing
-history, your bookmarks, or any page you have not explicitly invoked it on. It requests no host
-permissions, so it has no standing access to any website.
-
-Permissions
-- activeTab: lets the extension read the current tab, and only after you click its icon.
-- scripting: lets the extension run its measurement on that tab, on that click.
-
-Source code
-The extension is open source and can be reviewed at
-https://github.com/Bishop81/imagedimensions-extension
-
-Contact
-hello@imagedimensions.com
-```
-
----
+⚠️ **Keep it true.** Every claim on that page was checked against the code the day it was written. If
+the extension ever gains a network call, storage, or a permission, the policy has to change in the
+same commit — a stale privacy policy is a written claim that is no longer true, which is worse than
+having none.
 
 ## Distribution tab
 
