@@ -92,8 +92,14 @@ English (United States)
 ### Store icon **[required]** — 128×128 PNG
 
 ```
-extension/icons/icon128.png
+store/store-icon-128.png
 ```
+
+⚠️ **Upload this, not `icons/icon128.png`.** Google's spec puts the artwork in a **96×96** area with
+**16px of transparent padding per side**, totalling 128×128 — the Store adds its own frame and
+shadow, so a full-bleed icon gets visually cropped or double-framed. `icons/icon128.png` is
+deliberately full-bleed because that is correct for the *toolbar/extensions page*, and wrong here.
+Same artwork, different padding.
 
 ### Screenshots **[required]** — at least 1, up to 5. 1280×800 or 640×400 PNG/JPEG
 
