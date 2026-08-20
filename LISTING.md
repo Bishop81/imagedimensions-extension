@@ -5,9 +5,14 @@ Everything the Developer Dashboard asks for, in the order it asks. Fields are ma
 
 Upload package: `dist/imagedimensions-extension-0.2.0.zip` (run `./scripts/package.sh`).
 
-> ✅ Nothing is outstanding. The privacy policy the Store requires is live at
-> `imagedimensions.com/privacy` (built 2026-08-17), with an extension-specific section at
-> `#extension`.
+> ✅ **PUBLISHED 2026-08-19** — submitted Aug 17, approved in about two days.
+>
+>     https://chromewebstore.google.com/detail/imagedimensions-%E2%80%94-image-s/blmapabdbdadckppfcigonibooalipkh
+>
+> Keep this file as the source for future updates: a new version re-uses every field below, and the
+> Privacy-practices answers must still be true of whatever you ship next. ⚠️ The slug contains an
+> encoded em dash (`%E2%80%94`); keep it, and never propagate the `?authuser=`/`&hl=` params the
+> dashboard appends.
 
 ---
 

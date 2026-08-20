@@ -15,7 +15,11 @@ Roughly **10% of scans fail silently** for those reasons, and staging/localhost 
 most common case — developers checking work in progress. The extension measures the page as *you*
 are seeing it, which is a capability the website structurally cannot have.
 
-## Install (unpacked, for development)
+## Install
+
+**[Get it on the Chrome Web Store](https://chromewebstore.google.com/detail/imagedimensions-%E2%80%94-image-s/blmapabdbdadckppfcigonibooalipkh)** — published 2026-08-19.
+
+## Install unpacked (for development)
 
 1. Open `chrome://extensions`
 2. Turn on **Developer mode** (top right)
