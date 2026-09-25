@@ -14,6 +14,15 @@
 const OVERSIZED_AT = 4;
 const SITE = 'https://imagedimensions.com';
 
+/*
+ * One source, two stores. Firefox exposes `browser.*` returning promises while keeping `chrome.*`
+ * callback-based, so an awaited `chrome.tabs.query()` there resolves to `undefined` and
+ * destructuring it throws. Chrome and Edge do not define `browser` at all, and their MV3 `chrome.*`
+ * already returns promises. Both extension APIs used here are promise-shaped, so a one-line alias
+ * does the whole job and `webextension-polyfill` would be weight for nothing.
+ */
+const api = globalThis.browser ?? chrome;
+
 const view = document.getElementById('view');
 const hostEl = document.getElementById('host');
 const recheckBtn = document.getElementById('recheck');
@@ -200,9 +209,9 @@ function note(reason) {
 
 async function reveal(img) {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await api.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) return note('gone');
-    const [res] = await chrome.scripting.executeScript({
+    const [res] = await api.scripting.executeScript({
       target: { tabId: tab.id },
       func: revealImage,
       args: [img.ref, img.ratio > OVERSIZED_AT],
@@ -250,9 +259,14 @@ function render(data) {
   summary.className = 'summary';
   const headline = document.createElement('p');
   headline.className = 'headline ' + (oversized.length ? 'headline--warn' : 'headline--ok');
-  headline.innerHTML = oversized.length
-    ? `<strong>${oversized.length} of ${measurable.length} images are oversized</strong>`
-    : `<strong>All ${measurable.length} images are sized well</strong>`;
+  // Built as nodes rather than innerHTML. The counts are ours, but the measurements arrive from the
+  // page's own DOM, so nothing measured there is ever parsed as markup here. It also keeps AMO's
+  // UNSAFE_VAR_ASSIGNMENT warning off the submission.
+  const headlineStrong = document.createElement('strong');
+  headlineStrong.textContent = oversized.length
+    ? `${oversized.length} of ${measurable.length} images are oversized`
+    : `All ${measurable.length} images are sized well`;
+  headline.append(headlineStrong);
   const sub = document.createElement('p');
   sub.className = 'subline';
   sub.textContent =
@@ -293,10 +307,14 @@ function render(data) {
     name.title = img.src;
     const sizes = document.createElement('span');
     sizes.className = 'sizes';
-    sizes.innerHTML =
-      `${img.natural_w}×${img.natural_h}` +
-      `<span class="arrow">→</span>` +
-      `${img.rendered_w}×${img.rendered_h}`;
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.textContent = '→';
+    sizes.append(
+      document.createTextNode(`${img.natural_w}×${img.natural_h}`),
+      arrow,
+      document.createTextNode(`${img.rendered_w}×${img.rendered_h}`),
+    );
     meta.append(name, sizes);
 
     const badge = document.createElement('span');
@@ -320,7 +338,7 @@ async function run() {
   state('Measuring images…', '');
 
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await api.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) throw new Error('no-tab');
 
     try {
@@ -329,15 +347,16 @@ async function run() {
       hostEl.textContent = '';
     }
 
-    // Chrome refuses injection into its own pages and the Web Store. Say so plainly rather
-    // than showing an empty result that looks like a bug.
-    if (/^(chrome|edge|about|devtools|view-source):/.test(tab.url || '') ||
-        /^https:\/\/chromewebstore\.google\.com/.test(tab.url || '')) {
+    // Every browser refuses injection into its own pages and its own add-on gallery. Say so
+    // plainly rather than showing an empty result that looks like a bug. Firefox adds
+    // moz-extension:/resource: and guards addons.mozilla.org the way Chrome guards its store.
+    if (/^(chrome|edge|about|devtools|view-source|moz-extension|resource):/.test(tab.url || '') ||
+        /^https:\/\/(chromewebstore\.google\.com|addons\.mozilla\.org|microsoftedge\.microsoft\.com)/.test(tab.url || '')) {
       state('Browser pages can’t be measured', 'Open a normal web page and try again.');
       return;
     }
 
-    const [result] = await chrome.scripting.executeScript({
+    const [result] = await api.scripting.executeScript({
       target: { tabId: tab.id },
       func: measurePage,
     });

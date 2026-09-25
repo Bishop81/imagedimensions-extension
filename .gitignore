@@ -4,3 +4,6 @@
 # Web Store upload packages, built by scripts/package.sh
 *.zip
 dist/
+
+# AMO / Edge API credentials (account-level, shared with the DomainIntel add-on)
+.env

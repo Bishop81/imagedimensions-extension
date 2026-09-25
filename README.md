@@ -1,4 +1,4 @@
-# ImageDimensions — Chrome extension
+# ImageDimensions — browser extension
 
 Audits every image on the page you are currently looking at: the file's real pixel size versus the
 size the browser actually drew it at, with the wasteful ones flagged.
@@ -95,15 +95,69 @@ have to be bundled into the popup — significant weight for a surface that rend
 milliseconds. If installs justify it, the better shape is a right-click action on a single image
 rather than a second copy of the site's converters.
 
-## Packaging for the Chrome Web Store
+## Packaging
 
 ```bash
-./scripts/package.sh
+./scripts/package.sh chrome     # dist/imagedimensions-extension-<v>-chrome.zip   (Chrome AND Edge)
+./scripts/package.sh firefox    # dist/imagedimensions-extension-<v>-firefox.zip  (AMO)
 ```
 
-Writes `dist/imagedimensions-extension-<version>.zip`, containing only the runtime files — no README,
-LICENSE, scripts or VCS metadata, since anything extra is one more thing for review to ask about. Bump
-`version` in `manifest.json` first; the Web Store rejects a re-upload of an existing version number.
+Each zip contains only the runtime files — no README, LICENSE, scripts or VCS metadata, since anything
+extra is one more thing for review to ask about. Bump `version` in **both** manifests first; every
+store rejects a re-upload of an existing version number.
+
+The script also checks the two fields a store silently rejects on: `name` ≤ 45 characters (AMO's
+limit, stricter than Chrome's 75) and `description` ≤ 132 (Chrome's, stricter than AMO's), so a
+package that builds is submittable to either.
+
+## Firefox
+
+One source, two manifests. `manifest.firefox.json` adds `browser_specific_settings.gecko`, and
+`package.sh` writes whichever manifest was selected into the zip as `manifest.json`, so the two
+packages cannot drift — a change to `popup.js` is in both or neither.
+
+**The namespace fix is a one-line alias, not a polyfill.** `popup.js` opens with
+`const api = globalThis.browser ?? chrome`. Firefox exposes `browser.*` returning promises while
+keeping `chrome.*` callback-based, so an awaited `chrome.tabs.query()` there resolves to `undefined`
+and destructuring it throws. Chrome and Edge do not define `browser` at all, and their MV3 `chrome.*`
+already returns promises. This extension makes exactly two extension-API calls, both promise-shaped,
+so `webextension-polyfill` would be weight for nothing.
+
+**`strict_min_version` is 115**, an ESR. `data_collection_permissions` (required by AMO since
+2025-11-03; ours declares `none`, because nothing leaves the device) is newer than that, so
+`web-ext lint` warns twice that the key is unsupported at 115. Those two warnings are the deliberate
+trade: the key is simply ignored by older Firefox, whereas raising the floor to 140 would drop ESR
+users to keep a linter quiet.
+
+**Verified in real Firefox 156, not just in the linter:** the package installs as a temporary add-on
+through geckodriver, and `measurePage()` — read out of `popup.js`, not copied — returns correct
+natural and rendered sizes when run against a live page in Gecko. What is *not* automatable is the
+popup's own click path, because `activeTab` needs a real user gesture on the toolbar button. Check
+that by hand after install: click the icon on any ordinary page and confirm rows appear.
+
+## Publishing
+
+Three stores, three APIs, so one script each. Packages are automatable; **listing prose and
+screenshots mostly are not** — `LISTING.md` holds the text to paste.
+
+```bash
+python3 scripts/publish-firefox.py --status                  # what AMO holds
+python3 scripts/publish-firefox.py --upload dist/<v>-firefox.zip
+python3 scripts/publish-firefox.py --previews                # screenshots + captions
+
+../../overwatch/.venv/bin/python scripts/publish-chrome.py --status
+../../overwatch/.venv/bin/python scripts/publish-chrome.py --zip dist/<v>-chrome.zip
+../../overwatch/.venv/bin/python scripts/publish-chrome.py --zip dist/<v>-chrome.zip --publish
+```
+
+- **AMO** takes name, summary, categories, licence and screenshots through the API; only the long
+  description is dashboard-only. Credentials are `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` in
+  `extension/.env` (gitignored). ⚠️ They are **account-level and shared with the DomainIntel add-on**,
+  so generating a new pair breaks that one too. Copy the existing pair, never regenerate.
+- **Chrome** authenticates with the same Google service account used for GA4/GSC. `--zip` updates a
+  draft and changes nothing public; `--publish` is separate and effectively irreversible.
+- **Edge** takes the Chrome package unchanged, but needs a `PRODUCT_ID` that only exists once the
+  product has been created in Partner Center by hand. See `../../domainintel.app/extension/publish-edge.py`.
 
 ## Related
 

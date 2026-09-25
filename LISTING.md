@@ -253,3 +253,47 @@ having none.
 - [ ] Support URL resolves
 - [ ] After it goes live: add the listing URL to `ORGANIZATION_SAME_AS` in
       `image-dimensions-service/src/lib/organization.ts`, next to the GitHub and npm entries
+
+---
+
+# Firefox (addons.mozilla.org) — submitted 2026-09-25
+
+    https://addons.mozilla.org/en-US/firefox/addon/imagedimensions/
+
+**Status: `nominated`** (awaiting Mozilla review) with **version 0.2.1** in the listed channel. Name,
+summary, category (`web-development`), homepage and licence (MIT) were all set through the API by
+`scripts/publish-firefox.py --create`, so the only dashboard-only field left is the long description
+— paste the Chrome one above, which needs no changes for AMO.
+
+⚠️ **Two versions are in the queue.** 0.2.0 went up first and 0.2.1 replaced it minutes later after
+the `innerHTML` assignments in `popup.js` were rewritten as DOM nodes (AMO flags them
+`UNSAFE_VAR_ASSIGNMENT`; the values were ours, but a reviewer should not have to work that out). The
+newer one is what matters; 0.2.0 was left in place rather than deleted, since deleting a version
+consumes its number permanently.
+
+## Screenshots — unfinished, and why
+
+AMO takes previews through the API, and the captions do **not** go with the upload:
+
+- a caption as a plain multipart string is rejected outright,
+- as `caption[en-US]` it returns 201 and silently stores nothing,
+- only a JSON `PATCH` to the preview afterwards actually sets it.
+
+**Preview writes are throttled hard** — a handful in a row earned `Expected available in 3382 seconds`
+(about 56 minutes). Current state on the listing: three previews uploaded, of which **two are
+`screenshot-1-audit.png`** (the duplicate is id `413670`), `screenshot-3-clean.png` is missing, and
+**no captions are set**. `--previews` is now idempotent and paced, so finishing it is one command once
+the throttle clears:
+
+    python3 scripts/publish-firefox.py --previews      # after deleting 413670
+
+Deleting the duplicate needs one authenticated `DELETE .../previews/413670/`. Doing it in the
+dashboard takes seconds and is the better option if you are logged in anyway.
+
+# Edge Add-ons — blocked on Partner Center
+
+Edge takes `dist/imagedimensions-extension-<v>-chrome.zip` unchanged. The Update API can only push to
+a product that already exists, so the one-time step is **Chris's**: create the product in Partner
+Center, note its product id, and confirm whether the existing `EDGE_CLIENT_ID` / `EDGE_STORE_KEY`
+(issued for the DomainIntel product) cover it or a second pair is needed. After that, publishing is a
+copy of `../../domainintel.app/extension/publish-edge.py` with the new id.
