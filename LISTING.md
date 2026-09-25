@@ -271,24 +271,27 @@ the `innerHTML` assignments in `popup.js` were rewritten as DOM nodes (AMO flags
 newer one is what matters; 0.2.0 was left in place rather than deleted, since deleting a version
 consumes its number permanently.
 
-## Screenshots — unfinished, and why
+## Screenshots — done, and what the API actually requires
 
-AMO takes previews through the API, and the captions do **not** go with the upload:
+Three previews, captioned, verified by reading the listing back:
 
-- a caption as a plain multipart string is rejected outright,
-- as `caption[en-US]` it returns 201 and silently stores nothing,
-- only a JSON `PATCH` to the preview afterwards actually sets it.
+| id | caption |
+|---|---|
+| 413668 | The audit: every image on the page, worst overshoot first. |
+| 413669 | Clicking a row scrolls to that image and rings it. |
+| 413689 | A page whose images are all sized sensibly. |
 
-**Preview writes are throttled hard** — a handful in a row earned `Expected available in 3382 seconds`
-(about 56 minutes). Current state on the listing: three previews uploaded, of which **two are
-`screenshot-1-audit.png`** (the duplicate is id `413670`), `screenshot-3-clean.png` is missing, and
-**no captions are set**. `--previews` is now idempotent and paced, so finishing it is one command once
-the throttle clears:
+Two things about the API that cost an hour, worth knowing before touching previews again:
 
-    python3 scripts/publish-firefox.py --previews      # after deleting 413670
+**A caption does not travel with the upload.** As a plain multipart string it is rejected
+("You must provide an object of {lang-code:value}"); as `caption[en-US]` the upload returns 201 and
+silently stores nothing, which is the dangerous one. Only a JSON `PATCH` to the preview afterwards
+sets it. `--previews` now uploads first and patches captions second, for that reason.
 
-Deleting the duplicate needs one authenticated `DELETE .../previews/413670/`. Doing it in the
-dashboard takes seconds and is the better option if you are logged in anyway.
+**Preview writes throttle hard and the window is long.** A handful in a row earned
+`Expected available in 3382 seconds`, and the deletion of a duplicated upload waited **2,373 seconds**
+before it went through. Anything scripted here needs to wait out a 429 rather than fail, and the
+first attempt left a duplicate on the listing precisely because it did not.
 
 # Edge Add-ons — blocked on Partner Center
 
