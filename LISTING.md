@@ -7,6 +7,11 @@ Upload package: `dist/imagedimensions-extension-0.2.0.zip` (run `./scripts/packa
 
 > ✅ **PUBLISHED 2026-08-19** — submitted Aug 17, approved in about two days.
 >
+> 🔄 **v0.2.1 submitted 2026-09-26, state PENDING_REVIEW.** Code only, no listing change: the
+> `innerHTML` assignments became DOM nodes, the popup gained the `browser ?? chrome` alias for the
+> Firefox port, and the "browser pages can't be measured" guard now also covers `moz-extension:`,
+> `resource:`, AMO and the Edge store. Pushed with `scripts/publish-chrome.py --zip <zip> --publish`.
+>
 >     https://chromewebstore.google.com/detail/imagedimensions-%E2%80%94-image-s/blmapabdbdadckppfcigonibooalipkh
 >
 > Keep this file as the source for future updates: a new version re-uses every field below, and the
@@ -293,10 +298,9 @@ sets it. `--previews` now uploads first and patches captions second, for that re
 before it went through. Anything scripted here needs to wait out a 429 rather than fail, and the
 first attempt left a duplicate on the listing precisely because it did not.
 
-# Edge Add-ons — blocked on Partner Center
+# Edge Add-ons — see EDGE-LISTING.md
 
-Edge takes `dist/imagedimensions-extension-<v>-chrome.zip` unchanged. The Update API can only push to
-a product that already exists, so the one-time step is **Chris's**: create the product in Partner
-Center, note its product id, and confirm whether the existing `EDGE_CLIENT_ID` / `EDGE_STORE_KEY`
-(issued for the DomainIntel product) cover it or a second pair is needed. After that, publishing is a
-copy of `../../domainintel.app/extension/publish-edge.py` with the new id.
+Blocked on one human step in Partner Center: the Update API can only push to a product that already
+exists. **`EDGE-LISTING.md` in this folder has the five steps, every field written out ready to paste,
+and the four graphic assets** (including `store/edge-logo-300.png`, which Edge requires and Chrome
+does not). After the product exists, publishing is scripted like the other two stores.
