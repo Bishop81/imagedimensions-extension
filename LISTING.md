@@ -298,9 +298,14 @@ sets it. `--previews` now uploads first and patches captions second, for that re
 before it went through. Anything scripted here needs to wait out a 429 rather than fail, and the
 first attempt left a duplicate on the listing precisely because it did not.
 
-# Edge Add-ons — see EDGE-LISTING.md
+# Edge Add-ons — see EDGE-LISTING.txt
 
 Blocked on one human step in Partner Center: the Update API can only push to a product that already
-exists. **`EDGE-LISTING.md` in this folder has the five steps, every field written out ready to paste,
-and the four graphic assets** (including `store/edge-logo-300.png`, which Edge requires and Chrome
-does not). After the product exists, publishing is scripted like the other two stores.
+exists. **`EDGE-LISTING.txt`** in this folder has the five steps, every field written out ready to
+paste, and the four graphic assets — including `store/edge-logo-300.png`, which Edge requires and
+Chrome does not. After the product exists, publishing is scripted like the other two stores.
+
+⚠️ **It is a `.txt`, and deliberately contains no Markdown.** Partner Center's listing fields render
+none, so anything pasted out of a Markdown file arrives with its `**` and backticks intact. Keep the
+field blocks in that file literal — if you edit it, do not reach for Markdown emphasis, tables or
+code fences.

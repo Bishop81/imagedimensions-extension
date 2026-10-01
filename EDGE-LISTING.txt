@@ -1,0 +1,183 @@
+MICROSOFT EDGE ADD-ONS - LISTING SOURCE
+Plain text on purpose. Partner Center's fields do not render Markdown, so everything
+below can be copied straight in without stripping anything first.
+
+Written 2026-09-26. Everything that is not marked CHRIS is already built and in this repo.
+
+
+=====================================================================
+THE FIVE STEPS ONLY CHRIS CAN DO
+=====================================================================
+
+1. Sign in to Partner Center and open the Microsoft Edge program:
+   https://partner.microsoft.com/dashboard/microsoftedge/overview
+   The Edge extension program is free - there is no 5 dollar fee as on Chrome. If the
+   account has never been registered for the Edge program it asks once for a publisher
+   display name. Use the same one the Chrome listing shows.
+
+2. Choose "New extension" and upload this package:
+   extension/dist/imagedimensions-extension-0.2.1-chrome.zip
+   Edge takes the Chrome package unchanged. Do NOT upload the -firefox zip: it carries a
+   Gecko block Edge has no use for.
+
+3. Fill in the listing from the FIELDS section below. Nothing needs composing or editing.
+
+4. Submit for certification. Review usually takes a few days, similar to Chrome.
+
+5. Send back the Product ID - the GUID in the address bar once the extension exists, in
+   .../microsoftedge/extensions/<product-id>/... With that, future versions publish with
+   one scripted command and never need the dashboard again, the same way Chrome and
+   Firefox now work.
+
+
+=====================================================================
+FIELDS - copy each block exactly
+=====================================================================
+
+--- NAME -------------------------------------------------------------
+ImageDimensions - Image Size Auditor
+
+(Edge reads the name from the manifest, so this should already be filled in. If it shows
+an em dash rather than the hyphen above, that is correct and comes from the manifest.)
+
+
+--- SHORT DESCRIPTION -------------------------------------------------
+See every image's real size versus the size it's displayed at - on any page, including localhost and pages behind a login.
+
+
+--- DESCRIPTION -------------------------------------------------------
+Every image on a page has two sizes: the pixels in the file, and the pixels the browser actually draws. When the first is much larger than the second, the visitor downloads weight they never see — and it is invisible until you go looking.
+
+ImageDimensions shows you both numbers for every image on the page you are on, sorted worst first.
+
+WHAT YOU GET
+
+• Every image measured — the file's real pixel size next to the size it was drawn at
+• A multiplier showing how much was wasted, so a 3000×2000 file in a 250×167 slot reads plainly as 144×
+• CSS background images included — roughly a fifth of the images on a typical page, and most audits skip them entirely
+• Click any row to scroll straight to that image and highlight it on the page
+
+WHY NOT JUST USE A WEBSITE SCANNER
+
+Hosted scanners load your page in a headless browser somewhere else. That means they cannot see anything behind a login, anything protected by a bot filter, or anything running on localhost or a staging domain — which is exactly where you are working when the problem is still cheap to fix.
+
+This runs in your browser, on the page in front of you.
+
+IT MEASURES AGAINST YOUR ACTUAL DISPLAY
+
+A 400×400 image in a 200×200 slot is wasteful on a standard display and exactly right on a retina one. A headless scanner cannot tell the difference, because it does not have a screen. This extension knows your real device pixel ratio, so it will not flag a correctly-served retina image — and it will flag one that is oversized even after retina is accounted for.
+
+PRIVACY
+
+No account. No network requests. No analytics. No storage. Nothing about the pages you visit leaves your machine, because nothing is ever sent anywhere.
+
+It asks for two permissions and no more: permission to read the current tab when you click the icon, and permission to run the measurement on that click. There are no host permissions, so it has no standing access to any site.
+
+The source is public: github.com/Bishop81/imagedimensions-extension
+
+FROM THE MAKERS OF IMAGEDIMENSIONS.COM
+
+The same measurement is available as a hosted scanner, an MCP server for AI coding agents, and a CLI with a GitHub Action for failing a build on oversized images. See imagedimensions.com
+
+
+--- CATEGORY ----------------------------------------------------------
+Developer Tools
+
+
+--- LANGUAGE ----------------------------------------------------------
+English (United States)
+
+
+--- WEBSITE -----------------------------------------------------------
+https://imagedimensions.com
+
+
+--- SUPPORT CONTACT ---------------------------------------------------
+https://imagedimensions.com/contact
+
+
+--- PRIVACY POLICY ----------------------------------------------------
+https://imagedimensions.com/privacy
+
+
+--- SEARCH TERMS (up to 7; Chrome has no equivalent field) -------------
+image dimensions
+image size checker
+oversized images
+web performance
+responsive images
+image audit
+devtools
+
+
+--- PRIVACY QUESTIONNAIRE ---------------------------------------------
+Answer: no data collected.
+
+That is literally true and matches what the Firefox manifest declares. The extension
+makes no network requests, stores nothing, and has no analytics. If the form asks whether
+the extension uses remote code, the answer is also no - everything it runs ships inside
+the package.
+
+
+=====================================================================
+GRAPHIC ASSETS - all in extension/store/
+=====================================================================
+
+Store logo, required, 300x300:
+    store/edge-logo-300.png
+
+Screenshots, required, 1280x800 (the same three Chrome and Firefox use):
+    store/screenshot-1-audit.png
+    store/screenshot-2-reveal.png
+    store/screenshot-3-clean.png
+
+Small promotional tile, optional, 440x280:
+    store/promo-440x280.png
+
+Large promotional tile, optional, 1400x560:
+    not made. Skip it - it is only used if Microsoft features the extension.
+
+WARNING: the Edge logo and the Chrome store icon are different files on purpose. Chrome's
+store icon carries 16px of transparent padding inside a 128px canvas because the Chrome
+Store draws its own frame around it. Edge's logo is full bleed. Swapping them gets a
+double frame on one store and a floating mark on the other.
+
+edge-logo-300.png is generated, not hand drawn: ./scripts/make-edge-assets.sh rasterises
+the site's favicon.svg - the same geometry the toolbar icons were drawn from - at 300px
+and asserts the output size. Re-run it if the mark ever changes. Never rescale the PNG.
+
+One thing worth deciding for yourself: the mark's height-ruler ticks sit just outside the
+blue square, on transparency, so on a white store card they read as faint marks at the
+right edge. That is exactly how the icon looks in the browser toolbar today and on the
+live Chrome listing, so it ships consistent. Changing it is a redesign of the mark, not a
+store-asset fix.
+
+
+=====================================================================
+CREDENTIALS
+=====================================================================
+
+extension/.env carries EDGE_CLIENT_ID and EDGE_STORE_KEY, copied from the DomainIntel
+extension, which publishes to Edge today. Probed on 2026-09-26 against the Edge API: both
+a known product and a nonexistent one answer 404, not 401, so the key pair authenticates
+at account level.
+
+What that does not prove is authorisation for a NEW product, because an unauthorised
+product and a missing one look identical from outside. Once the product exists, one
+--check call against its real id settles it. If that returns 401, generate a fresh pair in
+Partner Center under the Edge program's Publish API section - but check first whether
+issuing new credentials invalidates DomainIntel's, the way Mozilla's API keys do.
+
+
+=====================================================================
+AFTER THE PRODUCT EXISTS - not Chris's job
+=====================================================================
+
+Publishing becomes a copy of ../../domainintel.app/extension/publish-edge.py with the new
+product id:
+
+    python3 scripts/publish-edge.py --check
+    python3 scripts/publish-edge.py --upload dist/imagedimensions-extension-<v>-chrome.zip
+    python3 scripts/publish-edge.py --upload <zip> --publish
+
+Same split as the other two stores: the package is scriptable, the listing prose is not.
