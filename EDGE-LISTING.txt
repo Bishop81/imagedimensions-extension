@@ -1,4 +1,20 @@
 MICROSOFT EDGE ADD-ONS - LISTING SOURCE
+
+STATUS: PUBLISHED 2026-10-01. The steps below are kept as the record of what was filled
+in, and the field text is still the source for any future edit.
+
+  Product ID (what the API needs)  972209ad-8e7b-4060-846e-af79f666ff28
+  Store ID                         0RDCKG1CMX5C
+  CRX ID                           hbjknogekehiojnajgdadmiafeocmfja
+
+  Credentials: SETTLED. The DomainIntel key pair works for this product - scripts/publish-edge.py
+  --check returns "credentials ACCEPTED" against the real product id, so they are account
+  scoped and no second pair is needed.
+
+  Public URL: not recorded here, because it could not be confirmed from outside. Partner
+  Center shows it on the extension's identity page once propagated; paste it in when it
+  appears. The store's product API answered 404 for this CRX ID on the day of publication,
+  which proves nothing either way.
 Plain text on purpose. Partner Center's fields do not render Markdown, so everything
 below can be copied straight in without stripping anything first.
 

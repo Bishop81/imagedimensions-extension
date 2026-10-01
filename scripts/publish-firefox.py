@@ -8,7 +8,11 @@ product. Two differences, both because this add-on did not exist on AMO yet:
   * `--create` submits the FIRST listed version, which is a different endpoint from later ones
     (POST /addons/addon/ rather than POST /addons/addon/<slug>/versions/). A listed first version
     also has required metadata — name, summary, categories and a licence — and the API does take all
-    of it, so only the long description and the screenshots are left to the dashboard.
+    of it. ⚠️ CORRECTED 2026-10-01: **nothing about an AMO listing needs the dashboard.** The long
+    description, homepage, support URL and email all go through a PATCH to the add-on, and the
+    screenshots through --previews, so Chrome's "the package is scriptable, the listing is not" split
+    does NOT apply here. The 0.2.1 listing went public with an empty description because this script
+    did not set one, not because it could not.
   * `--previews` uploads the store screenshots, which the dashboard otherwise wants by hand.
 
     python3 scripts/publish-firefox.py --status
@@ -50,6 +54,45 @@ SUMMARY = (
     "See every image's real size versus the size it's displayed at, on any page — including pages "
     "a scanner can't reach."
 )
+# ⚠️ PLAIN TEXT ONLY. AMO's API ESCAPES html in this field rather than honouring it: a description
+# sent with <b> and <ul> came back storing &lt;b&gt;, so the public page showed the tags as
+# literal text (2026-10-01). The dashboard's rich editor is not the same path. Newlines ARE
+# preserved, so structure it the way the Chrome listing does — caps for headings, • for bullets.
+# ⚠️ And never seed this constant from a read-back: AMO returns the stored, escaped form, so
+# round-tripping it escapes the escapes (3,480 chars became 5,408 on the first attempt).
+DESCRIPTION = """Every image on a page has two sizes: the pixels in the file, and the pixels the browser actually draws. When the first is much larger than the second, the visitor downloads weight they never see — and it is invisible until you go looking.
+
+ImageDimensions shows you both numbers for every image on the page you are on, sorted worst first.
+
+WHAT YOU GET
+
+• Every image measured — the file's real pixel size next to the size it was drawn at
+• A multiplier showing how much was wasted, so a 3000×2000 file in a 250×167 slot reads plainly as 144×
+• CSS background images included — roughly a fifth of the images on a typical page, and most audits skip them entirely
+• Click any row to scroll straight to that image and highlight it on the page
+
+WHY NOT JUST USE A WEBSITE SCANNER
+
+Hosted scanners load your page in a headless browser somewhere else. That means they cannot see anything behind a login, anything protected by a bot filter, or anything running on localhost or a staging domain — which is exactly where you are working when the problem is still cheap to fix.
+
+This runs in your browser, on the page in front of you.
+
+IT MEASURES AGAINST YOUR ACTUAL DISPLAY
+
+A 400×400 image in a 200×200 slot is wasteful on a standard display and exactly right on a retina one. A headless scanner cannot tell the difference, because it does not have a screen. This extension knows your real device pixel ratio, so it will not flag a correctly-served retina image — and it will flag one that is oversized even after retina is accounted for.
+
+PRIVACY
+
+No account. No network requests. No analytics. No storage. Nothing about the pages you visit leaves your machine, because nothing is ever sent anywhere.
+
+It asks for two permissions and no more: permission to read the current tab when you click the icon, and permission to run the measurement on that click. There are no host permissions, so it has no standing access to any site.
+
+The source is public: github.com/Bishop81/imagedimensions-extension
+
+FROM THE MAKERS OF IMAGEDIMENSIONS.COM
+
+The same measurement is available as a hosted scanner, an MCP server for AI coding agents, and a CLI with a GitHub Action for failing a build on oversized images. See imagedimensions.com"""
+
 # Slugs from GET /api/v5/addons/categories/. DomainIntel uses the same first one.
 CATEGORIES = ["web-development"]
 LICENSE = "MIT"  # extension/LICENSE is MIT, and the source is public.
@@ -135,6 +178,19 @@ def multipart(fields, files):
     return bytes(out), f"multipart/form-data; boundary={boundary}"
 
 
+def _t(value):
+    """
+    Read a translated field. ⚠️ AMO wraps OUTBOUND links in {"url": {...}, "outgoing": {...}} rather
+    than returning a plain translated string, so homepage and support_url read as empty if you treat
+    them like name or summary — which made a set field look like a failed write on 2026-10-01.
+    """
+    if isinstance(value, dict):
+        if "url" in value and isinstance(value["url"], dict):
+            value = value["url"]
+        return value.get("en-US") or next(iter(value.values()), "")
+    return value or ""
+
+
 def status():
     d = call(f"{API}/addons/addon/{SLUG}/", tolerate=(404,))
     if d.get("_http_error") == 404:
@@ -146,6 +202,10 @@ def status():
     print(f"  status    {d.get('status')}")
     print(f"  url       {d.get('url')}")
     print(f"  cats      {d.get('categories')}")
+    print(f"  desc      {len(_t(d.get('description')))} chars")
+    print(f"  homepage  {_t(d.get('homepage')) or '(empty)'}")
+    print(f"  support   {_t(d.get('support_url')) or '(empty)'}  {_t(d.get('support_email'))}")
+    print(f"  previews  {len(d.get('previews') or [])}")
     cur = d.get("current_version") or {}
     print(f"  version   {cur.get('version') or '(none public yet)'}")
     for f in cur.get("files") or []:
@@ -196,8 +256,8 @@ def create(zip_path):
     d = call(f"{API}/addons/addon/", method="POST",
              body=json.dumps(payload).encode(), content_type="application/json")
     print(f"  created {d.get('slug')}  status={d.get('status')}  url={d.get('url')}")
-    print("Queued for review. Long description and screenshots are the dashboard's job "
-          "(--previews uploads the screenshots).")
+    print("Queued for review. Now run --listing and --previews: a listing published with an empty "
+          "description is the failure mode this script had on its first use.")
     return d
 
 
@@ -207,6 +267,25 @@ def upload(zip_path):
                body=json.dumps({"upload": uuid}).encode(), content_type="application/json")
     print(f"  version {ver.get('version')} created, channel {ver.get('channel')}")
     print("Queued for review. Listing text stays as the dashboard has it.")
+
+
+LISTING = {
+    "description": {"en-US": DESCRIPTION},
+    "homepage": {"en-US": HOMEPAGE},
+    "support_url": {"en-US": "https://imagedimensions.com/contact"},
+    # ⚠️ Every text field here is translated, support_email included. A bare string is a 400.
+    "support_email": {"en-US": "hello@imagedimensions.com"},
+}
+
+
+def listing():
+    """Set the prose fields. Safe to re-run; AMO overwrites rather than appending."""
+    call(f"{API}/addons/addon/{SLUG}/", method="PATCH",
+         body=json.dumps(LISTING).encode(), content_type="application/json")
+    d = call(f"{API}/addons/addon/{SLUG}/")
+    print(f"  desc      {len(_t(d.get('description')))} chars")
+    print(f"  homepage  {_t(d.get('homepage')) or '(empty)'}")
+    print(f"  support   {_t(d.get('support_url')) or '(empty)'}  {_t(d.get('support_email'))}")
 
 
 def previews():
@@ -263,6 +342,7 @@ def main():
     ap.add_argument("--status", action="store_true", help="authenticate and show what AMO holds")
     ap.add_argument("--create", metavar="ZIP", help="FIRST submission: create the add-on from this package")
     ap.add_argument("--upload", metavar="ZIP", help="later submissions: add a version to the listed channel")
+    ap.add_argument("--listing", action="store_true", help="set description, homepage and support links")
     ap.add_argument("--previews", action="store_true", help="upload the store screenshots")
     a = ap.parse_args()
 
@@ -272,6 +352,8 @@ def main():
         create(a.create)
     elif a.upload:
         upload(a.upload)
+    elif a.listing:
+        listing()
     elif a.previews:
         previews()
     else:

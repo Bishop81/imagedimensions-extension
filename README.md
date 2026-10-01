@@ -15,9 +15,25 @@ Roughly **10% of scans fail silently** for those reasons, and staging/localhost 
 most common case — developers checking work in progress. The extension measures the page as *you*
 are seeing it, which is a capability the website structurally cannot have.
 
+## Where it is published
+
+| Store | State | Listing |
+|---|---|---|
+| Chrome Web Store | v0.2.1 published | `chromewebstore.google.com/detail/imagedimensions-%E2%80%94-image-s/blmapabdbdadckppfcigonibooalipkh` |
+| Firefox (AMO) | v0.2.1 public | `addons.mozilla.org/en-US/firefox/addon/imagedimensions/` |
+| Microsoft Edge | published 2026-10-01 | product `972209ad-8e7b-4060-846e-af79f666ff28`, CRX `hbjknogekehiojnajgdadmiafeocmfja` |
+
 ## Install
 
 **[Get it on the Chrome Web Store](https://chromewebstore.google.com/detail/imagedimensions-%E2%80%94-image-s/blmapabdbdadckppfcigonibooalipkh)** — published 2026-08-19.
+
+## Where it is published
+
+| Store | State | Listing |
+|---|---|---|
+| Chrome Web Store | v0.2.1 published | `chromewebstore.google.com/detail/imagedimensions-%E2%80%94-image-s/blmapabdbdadckppfcigonibooalipkh` |
+| Firefox (AMO) | v0.2.1 public | `addons.mozilla.org/en-US/firefox/addon/imagedimensions/` |
+| Microsoft Edge | published 2026-10-01 | product `972209ad-8e7b-4060-846e-af79f666ff28`, CRX `hbjknogekehiojnajgdadmiafeocmfja` |
 
 ## Install unpacked (for development)
 
@@ -150,14 +166,21 @@ python3 scripts/publish-firefox.py --previews                # screenshots + cap
 ../../overwatch/.venv/bin/python scripts/publish-chrome.py --zip dist/<v>-chrome.zip --publish
 ```
 
-- **AMO** takes name, summary, categories, licence and screenshots through the API; only the long
-  description is dashboard-only. Credentials are `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` in
-  `extension/.env` (gitignored). ⚠️ They are **account-level and shared with the DomainIntel add-on**,
-  so generating a new pair breaks that one too. Copy the existing pair, never regenerate.
+- **AMO** takes the **entire listing** through the API — name, summary, categories, licence,
+  homepage, support URL and email, the long description (`--listing`) and the screenshots
+  (`--previews`). Nothing here needs the dashboard, which is the opposite of Chrome.
+  ⚠️ **The description field is PLAIN TEXT: AMO escapes any HTML you send**, so `<b>` arrives on the
+  public page as literal `&lt;b&gt;`. Newlines survive, and bare URLs are linkified by AMO itself.
+  ⚠️ **Never seed `DESCRIPTION` from a read-back** — AMO returns the stored, escaped form, so a
+  round trip escapes the escapes. Credentials are `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` in
+  `extension/.env` (gitignored), **account-level and shared with the DomainIntel add-on**, so
+  generating a new pair breaks that one too. Copy the existing pair, never regenerate.
 - **Chrome** authenticates with the same Google service account used for GA4/GSC. `--zip` updates a
   draft and changes nothing public; `--publish` is separate and effectively irreversible.
-- **Edge** takes the Chrome package unchanged, but needs a `PRODUCT_ID` that only exists once the
-  product has been created in Partner Center by hand. See `../../domainintel.app/extension/publish-edge.py`.
+- **Edge** takes the Chrome package unchanged. `scripts/publish-edge.py` holds the product id and
+  uses the same `EDGE_CLIENT_ID` / `EDGE_STORE_KEY` pair as DomainIntel — confirmed account-scoped
+  against the real product with `--check`. Listing prose is dashboard-only; `EDGE-LISTING.txt` holds
+  it, in plain text because Partner Center renders no Markdown.
 
 ## Related
 

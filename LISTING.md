@@ -7,7 +7,7 @@ Upload package: `dist/imagedimensions-extension-0.2.0.zip` (run `./scripts/packa
 
 > ✅ **PUBLISHED 2026-08-19** — submitted Aug 17, approved in about two days.
 >
-> 🔄 **v0.2.1 submitted 2026-09-26, state PENDING_REVIEW.** Code only, no listing change: the
+> ✅ **v0.2.1 PUBLISHED** (submitted 2026-09-26, approved within days). Code only, no listing change: the
 > `innerHTML` assignments became DOM nodes, the popup gained the `browser ?? chrome` alias for the
 > Firefox port, and the "browser pages can't be measured" guard now also covers `moz-extension:`,
 > `resource:`, AMO and the Edge store. Pushed with `scripts/publish-chrome.py --zip <zip> --publish`.
