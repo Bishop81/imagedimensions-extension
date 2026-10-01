@@ -178,16 +178,25 @@ Small promotional tile, optional, 440x280:
     store/promo-440x280.png
 
 Large promotional tile, optional, 1400x560:
-    not made. Skip it - it is only used if Microsoft features the extension.
+    store/edge-hero-1400x560.png
 
 WARNING: the Edge logo and the Chrome store icon are different files on purpose. Chrome's
 store icon carries 16px of transparent padding inside a 128px canvas because the Chrome
 Store draws its own frame around it. Edge's logo is full bleed. Swapping them gets a
 double frame on one store and a floating mark on the other.
 
-edge-logo-300.png is generated, not hand drawn: ./scripts/make-edge-assets.sh rasterises
-the site's favicon.svg - the same geometry the toolbar icons were drawn from - at 300px
-and asserts the output size. Re-run it if the mark ever changes. Never rescale the PNG.
+Both Edge-only assets are generated, not hand drawn. One command makes them:
+
+    ./scripts/make-edge-assets.sh
+
+It rasterises the site's favicon.svg - the same geometry the toolbar icons were drawn
+from - at 300px for the logo and asserts the output size, then renders the hero tile.
+Re-run it if the mark ever changes. Never rescale a PNG by hand.
+
+The hero tile shows what the popup itself shows: a row per image, the file's own size
+next to the size it was drawn at, and the overshoot as a multiple. Every multiplier on it
+is COMPUTED from the two sizes beside it at render time, never typed - 3000x2000 drawn at
+250x167 is 143.7, which prints as 144x. Change a row's numbers and the badge follows.
 
 One thing worth deciding for yourself: the mark's height-ruler ticks sit just outside the
 blue square, on transparency, so on a white store card they read as faint marks at the

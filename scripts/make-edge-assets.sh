@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Renders the one store asset Microsoft Edge Add-ons requires that Chrome does not:
-# a 300x300 store logo.
+# Renders the two store assets Microsoft Edge Add-ons wants that Chrome does not:
+# a 300x300 store logo (required) and a 1400x560 large promotional tile (optional).
 #
 #   ./scripts/make-edge-assets.sh
 #
 # Everything else carries over from store/ unchanged — Edge takes the same 1280x800
-# screenshots Chrome already needed, and the 440x280 promotional tile is already there.
+# screenshots Chrome already needed, and the 440x280 small tile is already there.
 #
 # Rendered from the SITE's favicon.svg, which is the geometric source the toolbar icons were
 # drawn from (see d6f2549). Rasterising the vector keeps the mark identical to the one in the
@@ -36,3 +36,6 @@ if (w, h) != (300, 300):
     sys.exit(f"{p} came out {w}x{h}, expected 300x300")
 print(f"{p}  {w}x{h}")
 PY
+
+# The hero tile needs the logo above, so it runs second.
+python3 "$(dirname "$0")/make-edge-hero.py"
