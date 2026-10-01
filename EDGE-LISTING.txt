@@ -110,13 +110,56 @@ image audit
 devtools
 
 
---- PRIVACY QUESTIONNAIRE ---------------------------------------------
-Answer: no data collected.
+--- PRIVACY FORM (the tab that gets submissions rejected) --------------
+Every answer below is literally true of the code, which is what makes it safe to say.
+These are the answers Chrome approved, with the browser name made neutral.
 
-That is literally true and matches what the Firefox manifest declares. The extension
-makes no network requests, stores nothing, and has no analytics. If the form asks whether
-the extension uses remote code, the answer is also no - everything it runs ships inside
-the package.
+
+SINGLE PURPOSE DESCRIPTION (max 1000)
+
+This extension audits the images on the web page the user is currently viewing. For each image it reports the file's intrinsic pixel dimensions alongside the dimensions the browser rendered it at, and flags images whose file is substantially larger than the space it is displayed in. Clicking a result scrolls that image into view and highlights it.
+
+
+ACTIVETAB JUSTIFICATION (max 1000)
+
+Used to read the images of the page the user is currently viewing. Access is granted by the browser only for the tab the user is on, and only when the user clicks the extension's toolbar icon. The extension requests no host permissions, so it has no access to any site unless the user explicitly invokes it on that tab.
+
+
+SCRIPTING JUSTIFICATION (max 1000)
+
+Used to run the measurement function in the active tab when the user clicks the toolbar icon. The injected function reads each image's naturalWidth and naturalHeight and its rendered bounding box, plus the element's computed background-image, and returns those measurements to the popup. A second function is injected only when the user clicks a result: it scrolls that element into view and draws a temporary highlight, which it then removes. Neither function modifies the page's content.
+
+
+ARE YOU USING REMOTE CODE?   ->   No
+
+Justification (max 1000)
+
+All executable code ships inside the extension package. There are no script tags or module imports pointing at external files, no eval or new Function, no WebAssembly, and no network requests of any kind at runtime. The popup measures the active tab locally and renders the result.
+
+
+WHAT USER DATA DO YOU PLAN TO COLLECT?   ->   tick NOTHING
+
+None of the categories apply. The extension transmits nothing, stores nothing and has no
+analytics.
+
+On "website content", which is the one a reviewer may query: the extension READS image
+dimensions from the page in order to display them, but does not COLLECT them - nothing is
+transmitted, persisted or retained once the popup closes. The disclosure asks about
+collection. The public source backs that up.
+
+
+PRIVACY POLICY URL
+
+https://imagedimensions.com/privacy#extension
+
+The anchor drops a reviewer straight on the extension-specific section rather than the
+website policy above it. Verified live 2026-10-01.
+
+
+CERTIFY ALL THREE DISCLOSURES - each is true:
+  - no selling or transferring user data to third parties outside the approved use cases
+  - no using or transferring user data for purposes unrelated to the single purpose
+  - no using or transferring user data to determine creditworthiness or for lending
 
 
 =====================================================================
