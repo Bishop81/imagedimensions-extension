@@ -300,10 +300,55 @@ first attempt left a duplicate on the listing precisely because it did not.
 
 # Edge Add-ons — see EDGE-LISTING.txt
 
-Blocked on one human step in Partner Center: the Update API can only push to a product that already
-exists. **`EDGE-LISTING.txt`** in this folder has the five steps, every field written out ready to
-paste, and the four graphic assets — including `store/edge-logo-300.png`, which Edge requires and
-Chrome does not. After the product exists, publishing is scripted like the other two stores.
+✅ **Submitted and published to certification 2026-10-01/02.** The product exists in Partner Center,
+so the Update API can push to it and publishing is now scripted like the other two stores
+(`scripts/publish-edge.py --upload <zip> --publish`).
+
+| | |
+|---|---|
+| Product ID (API) | `972209ad-8e7b-4060-846e-af79f666ff28` |
+| Store ID | `0RDCKG1CMX5C` |
+| CRX / extension ID | `hbjknogekehiojnajgdadmiafeocmfja` |
+
+⚠️ **The public listing is NOT live yet** — checked 2026-10-03, still in Microsoft's certification
+queue. Do not hand any Edge URL to the backlinks lane until the test below passes.
+
+## How to tell whether the Edge listing is actually live
+
+⛔ **`curl` on the listing URL is useless here, and will tell you it is live when it is not.**
+`https://microsoftedge.microsoft.com/addons/detail/<anything>` is a client-rendered SPA that returns
+**HTTP 200 for a completely bogus extension id**. A 32-character string of `a`s returns 200. Any
+check built on the status code of that URL passes before the extension exists.
+
+Two endpoints do discriminate. Both were validated against **uBlock Origin**
+(`odfafepnkmbhccpbejgmiehpchacaeak`, known live) before being believed — a 404 means nothing until
+you have seen the same probe return 200 for something that is definitely published:
+
+```bash
+CRX=hbjknogekehiojnajgdadmiafeocmfja
+
+# 1. Product detail JSON — returns name, storeProductId, activeInstallCount when live
+curl -s "https://microsoftedge.microsoft.com/addons/getproductdetailsbycrxid/$CRX"
+
+# 2. CRX download — 302 to a delivery.mp.microsoft.com URL when live
+curl -s -o /dev/null -w '%{http_code} %{redirect_url}\n' \
+  "https://edge.microsoft.com/extensionwebstorebase/v1/crx?response=redirect&x=id%3D${CRX}%26installsource%3Dondemand%26uc"
+```
+
+On 2026-10-03 both returned **404** for our id while uBlock returned a full JSON body and a **302**
+to a real CRX, which is what makes the negative trustworthy rather than merely unproven.
+
+⚠️ **`getproductdetailsbypid/<storeId>` does not exist** — it serves the SPA shell, for the control
+id as well as ours, so it cannot answer this question. It looks like an answer and is not.
+
+**When it goes live:** the canonical URL is
+`https://microsoftedge.microsoft.com/addons/detail/<slug>/hbjknogekehiojnajgdadmiafeocmfja`. Take
+the slug from the detail JSON rather than guessing it, then hand the URL to the backlinks lane and
+add it to `ORGANIZATION_SAME_AS` in `image-dimensions-service/src/lib/organization.ts` beside the
+Chrome and AMO entries.
+
+**`EDGE-LISTING.txt`** in this folder holds every listing field written out ready to paste and the
+four graphic assets — including `store/edge-logo-300.png`, which Edge requires and Chrome does not.
 
 ⚠️ **It is a `.txt`, and deliberately contains no Markdown.** Partner Center's listing fields render
 none, so anything pasted out of a Markdown file arrives with its `**` and backticks intact. Keep the
